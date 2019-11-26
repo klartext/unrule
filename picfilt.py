@@ -47,34 +47,7 @@ outs = 2 * stretch + ins
 
 outpicarray = bwpicarr.copy()
 
-def foo():
-    for xval in range(50,600):
-        for yval in range(40,200):
-            outer = bwpicarr[yval : yval + outs,   xval : xval + outs]
-            inner = outer[stretch : ins + stretch, stretch : ins + stretch]
-            #print("outer shape:", outer.shape)
-            #print("inner shape:", inner.shape)
 
-            outersum = outer.sum()
-            innersum = inner.sum()
-            framesum = outersum - innersum
-
-            frameav = framesum / (outs*outs - ins*ins)
-            innerav = innersum / (ins*ins)
-            allav = outersum/(outs*outs)
-
-            avdiff = frameav - innerav
-
-            #print("avdiff:", avdiff)
-
-    #        if abs(avdiff) > 5 and abs(avdiff) < 10:
-    #            for yo in range(0,outs):
-    #                for xo in range(0,outs):
-    #                    outpicarray[yval+xo][xval+xo] = frameav
-            if avdiff > -10 and avdiff < 10:
-                outpicarray[yval][xval] = frameav
-            else:
-                outpicarray[yval][xval] = bwpicarr[yval][xval]
 
 def bar():
     # das geht schon mal sehr gut!
