@@ -51,8 +51,8 @@ for xval in range(50,600):
     for yval in range(40,200):
         outer = bwpicarr[yval : yval + outs,   xval : xval + outs]
         inner = outer[stretch : ins + stretch, stretch : ins + stretch]
-        print("outer shape:", outer.shape)
-        print("inner shape:", inner.shape)
+        #print("outer shape:", outer.shape)
+        #print("inner shape:", inner.shape)
 
         outersum = outer.sum()
         innersum = inner.sum()
