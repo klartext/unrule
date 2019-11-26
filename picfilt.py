@@ -41,8 +41,8 @@ print(bwpicarr.shape)
 print(bwpicarr.dtype)
 print(bwpicarr.size)
 
-ins = 4
-stretch    = 1
+ins = 3
+stretch    = 2
 outs = 2 * stretch + ins
 
 outpicarray = bwpicarr.copy()
@@ -60,15 +60,20 @@ for xval in range(50,600):
 
         frameav = framesum / (outs*outs - ins*ins)
         innerav = innersum / (ins*ins)
+        allav = outersum/(outs*outs)
 
-        #print("frameav | innerav | diff", frameav, innerav, frameav - innerav)
-        #arithmittel = outer.sum()/outer.size
+        avdiff = frameav - innerav
 
-        #print(outer)
-        #print("Mittelwert:", arithmittel)
-        for yo in range(0,outs):
-            for xo in range(0,outs):
-                outpicarray[yval+xo][xval+xo] = frameav
+        #print("avdiff:", avdiff)
+
+#        if abs(avdiff) > 5 and abs(avdiff) < 10:
+#            for yo in range(0,outs):
+#                for xo in range(0,outs):
+#                    outpicarray[yval+xo][xval+xo] = frameav
+        if avdiff > -10 and avdiff < 10:
+            outpicarray[yval][xval] = frameav
+        else:
+            outpicarray[yval][xval] = bwpicarr[yval][xval]
 
 
 save_nparray_as_pic(outpicarray, "out.png")
