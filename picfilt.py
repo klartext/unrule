@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
+class Antikaro:
+    def __init__(self, image):
+        pass
 
 # plt.imshow(pic)
 
@@ -33,6 +36,34 @@ def save_nparray_as_pic(nparr, filename):
 #####################################################
 
 
+
+
+def bar( ins, outs, width, height, image_array ):
+
+    outpicarray = image_array.copy()
+
+    for xval in range(outs, width - outs):
+        for yval in range(outs, height - outs):
+
+            left = image_array[yval,  xval - outs : xval - 1]
+            right = image_array[yval,  xval +1 : xval + outs]
+
+            lav = left.sum()/(outs-1)
+            rav = right.sum()/(outs-1)
+
+            avdiff = abs(lav - rav)
+
+            # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
+
+            if avdiff > 0 and avdiff < 8:
+                outpicarray[yval][xval] = (lav + rav) / 2
+            else:
+                outpicarray[yval][xval] = image_array[yval][xval]
+
+    return outpicarray
+
+
+
 bwpicarr = readimage_as_grayval_to_array("lemma.png")
 
 print(type(bwpicarr))
@@ -41,65 +72,21 @@ print(bwpicarr.shape)
 print(bwpicarr.dtype)
 print(bwpicarr.size)
 
+height, width = bwpicarr.shape
+
+print("width:", width)
+print("height:", height)
+
 ins = 3
 stretch  = 2
 outs = 2 * stretch + ins
 
-outpicarray = bwpicarr.copy()
+
+print("ins =", ins)
+print("outs =", outs)
+print("stretch =", stretch)
+print("height:", height)
 
 
-
-def bar():
-    # das geht schon mal sehr gut!
-    for xval in range(20,750):
-        for yval in range(20,240):
-            left = bwpicarr[yval,  xval - outs : xval - 1]
-            right = bwpicarr[yval,  xval +1 : xval + outs]
-
-            lav = left.sum()/(outs-1)
-            rav = right.sum()/(outs-1)
-
-            avdiff = abs(lav - rav)
-
-
-            #print(left, right)
-            #print("lav / rav:", lav, rav)
-            #print(avdiff)
-
-
-
-            # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
-
-            if avdiff > 0 and avdiff < 8:
-                outpicarray[yval][xval] = (lav + rav) / 2
-            else:
-                outpicarray[yval][xval] = bwpicarr[yval][xval]
-
-    # Das hier funktioniert noch nicht
-    for xval in range(20,750):
-        for yval in range(20,240):
-            above = bwpicarr[yval - outs : yval - 1, xval]
-            below = bwpicarr[yval +1 : yval + outs, xval]
-
-            aav = above.sum()/(outs-1)
-            bav = below.sum()/(outs-1)
-
-            avdiff = abs(aav - bav)
-
-
-            #print(above, below)
-            #print("aav / bav:", aav, bav)
-            #print(avdiff)
-
-
-
-            # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
-
-            if avdiff > 0 and avdiff < 8:
-                outpicarray[yval][xval] = (aav + bav) / 2
-            else:
-                outpicarray[yval][xval] = bwpicarr[yval][xval]
-
-
-bar()
+outpicarray = bar(ins, outs, width, height, bwpicarr)
 save_nparray_as_pic(outpicarray, "out.png")
