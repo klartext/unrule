@@ -5,10 +5,54 @@ import numpy as np
 from PIL import Image
 
 class Antikaro:
-    def __init__(self, image):
-        pass
+    def __init__(self, bwpicarray, ins, stretch):
+        #self.bwpicarray = bwpicarr
+        self.height, self.width = bwpicarr.shape
 
-# plt.imshow(pic)
+        self.ins     = ins
+        self.stretch = stretch
+        self.outs    = 2 * stretch + ins
+
+        outpicarray = self.bar(bwpicarray)
+        if False:
+            outpicarray = np.transpose(outpicarray)
+            outpicarray = self.bar(outpicarray)
+            outpicarray = np.transpose(outpicarray)
+        save_nparray_as_pic(outpicarray, "out.png")
+
+
+    def bar(self, bwpicarray):
+    #ins, outs, width, height, image_array ):
+
+        height, width = bwpicarray.shape
+
+        outs = self.outs
+        outpicarray = bwpicarray.copy()
+
+        avdiff_low = 0
+        avdiff_high = 15
+
+
+        for xval in range(outs, width - outs):
+            for yval in range(outs, height - outs):
+
+                left = bwpicarray[yval,  xval - outs : xval - 1]
+                right = bwpicarray[yval,  xval +1 : xval + outs]
+
+                lav = left.sum()/stretch
+                rav = right.sum()/stretch
+
+                avdiff = abs(lav - rav)
+
+                # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
+
+                if avdiff > avdiff_low and avdiff < avdiff_high:
+                    outpicarray[yval][xval] = (lav + rav) / 2
+                else:
+                    outpicarray[yval][xval] = bwpicarray[yval][xval]
+
+        return outpicarray
+
 
 def readimage_to_array(filename):
     pic = Image.open(filename)
@@ -38,55 +82,28 @@ def save_nparray_as_pic(nparr, filename):
 
 
 
-def bar( ins, outs, width, height, image_array ):
-
-    outpicarray = image_array.copy()
-
-    for xval in range(outs, width - outs):
-        for yval in range(outs, height - outs):
-
-            left = image_array[yval,  xval - outs : xval - 1]
-            right = image_array[yval,  xval +1 : xval + outs]
-
-            lav = left.sum()/(outs-1)
-            rav = right.sum()/(outs-1)
-
-            avdiff = abs(lav - rav)
-
-            # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
-
-            if avdiff > 0 and avdiff < 8:
-                outpicarray[yval][xval] = (lav + rav) / 2
-            else:
-                outpicarray[yval][xval] = image_array[yval][xval]
-
-    return outpicarray
 
 
 
-bwpicarr = readimage_as_grayval_to_array("lemma.png")
 
-print(type(bwpicarr))
-print(bwpicarr.ndim)
-print(bwpicarr.shape)
-print(bwpicarr.dtype)
-print(bwpicarr.size)
+#print(type(bwpicarr))
+#print(bwpicarr.ndim)
+#print(bwpicarr.shape)
+#print(bwpicarr.dtype)
+#print(bwpicarr.size)
 
-height, width = bwpicarr.shape
+#print("width:", width)
+#print("height:", height)
 
-print("width:", width)
-print("height:", height)
 
-ins = 3
+#print("ins =", ins)
+#print("outs =", outs)
+#print("stretch =", stretch)
+#print("height:", height)
+
+# plt.imshow(pic)
+
+ins = 1
 stretch  = 2
-outs = 2 * stretch + ins
-
-
-print("ins =", ins)
-print("outs =", outs)
-print("stretch =", stretch)
-print("height:", height)
-
-
-outpicarray = bar(ins, outs, width, height, bwpicarr)
-save_nparray_as_pic(outpicarray, "out.png")
+bwpicarr = readimage_as_grayval_to_array("lemma.png")
+foo = Antikaro(bwpicarr, ins, stretch)
