@@ -70,34 +70,52 @@ class Antikaro:
 
         outpicarray = bwpicarray.copy()
 
-        avdiff_low = 0
-        avdiff_high = 15
+        avdiff_low = -9
+        avdiff_high = 2
         print("ins, stretch, outs:", self.ins, self.stretch, self.outs)
 
 
-        for yval in range(outs, height - outs):
-            for xval in range(outs, width - outs):
+        for yval in range(0, height - outs):
+            for xval in range(0, width - outs):
 
                 #print("yval, xval", yval, xval)
-                left = bwpicarray[yval,  xval : xval + stretch]
-                right = bwpicarray[yval,  xval + ins + stretch : xval + ins + 2 * stretch]
+                left   = bwpicarray[yval,  xval : xval + stretch]
+                inside = bwpicarray[yval,  xval + stretch : xval + ins + stretch]
+                right  = bwpicarray[yval,  xval + ins + stretch : xval + ins + 2 * stretch]
                 #print("von - bis:", list(range(0,100))[xval : xval + stretch])
+                #print("von - bis:", list(range(0,100))[xval + stretch : xval + ins + stretch])
                 #print("von - bis:", list(range(0,100))[xval + ins + stretch : xval + ins + 2 * stretch])
 
                 lav = left.sum()/self.stretch
+                insav = inside.sum()/self.ins
                 rav = right.sum()/self.stretch
 
-                avdiff = abs(lav - rav)
+                avdiff = (lav - rav)      # for decision if newval is used
+                newval =  (lav + rav) / 2 # the new value for inside, if used at all
+
+
+                print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
-                if avdiff > avdiff_low and avdiff < avdiff_high:
-                    outpicarray[yval][xval] = (lav + rav) / 2
-                else:
-                    outpicarray[yval][xval] = bwpicarray[yval][xval]
+                #if avdiff_low < avdiff and avdiff < avdiff_high and  -15 < insav - newval and insav - newval < 0:
+                for idx in range(stretch + 1, stretch + ins + 1):
+                    xpos = xval + idx
 
-        #self.outpicarray = outpicarray
-        #return outpicarray
+                    if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0:
+                    #if True:
+                        # copy new value to newpic
+                        #newval = 0 ### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        #for idx in range(stretch, stretch + ins + 1):
+                        print("(y,xpos) = ({0:d},{1:d}) <- {2:f}".format(yval, xpos, newval) )
+                        outpicarray[yval][xpos] = newval
+                    else:
+                        # just copy orig data to newpic
+                        #for idx in range(stretch, stretch + ins + 1):
+                            outpicarray[yval][xpos] = bwpicarray[yval][xpos]
+
+        self.outpicarray = outpicarray
+        return outpicarray
 
         for yval in range(outs, height - outs):
             for xval in range(outs, width - outs):
@@ -145,9 +163,10 @@ def save_nparray_as_pic(nparr, filename):
 
 
 
-foo = Antikaro("lemma.png")
-foo.set_ins(1)
-foo.set_stretch(2)
+#foo = Antikaro("lemma.png")
+foo = Antikaro("small.png")
+foo.set_ins(3)
+foo.set_stretch(3)
 #foo.transpose()
 foo.remove_lineature()
 #foo.transpose()
