@@ -1,5 +1,6 @@
 #! /usr/bin/python
 
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -88,7 +89,7 @@ class Antikaro:
                 avdiff = (lav - rav)      # for decision if newval is used
                 newval =  (lav + rav) / 2 # the new value for inside, if used at all
 
-                print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
+                #print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
@@ -96,7 +97,7 @@ class Antikaro:
                     xpos = xval + idx
 
                     if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
-                        print("(y,xpos) = ({0:d},{1:d}) <- {2:f}".format(yval, xpos, newval) )
+                        #print("(y,xpos) = ({0:d},{1:d}) <- {2:f}".format(yval, xpos, newval) )
                         outpicarray[yval][xpos] = newval
                     else: # just copy orig data to newpic
                             outpicarray[yval][xpos] = bwpicarray[yval][xpos]
@@ -104,13 +105,13 @@ class Antikaro:
         #self.outpicarray = outpicarray
         #return outpicarray
 
-        print("ins, stretch, outs:", self.ins, self.stretch, self.outs)
+        #print("ins, stretch, outs:", self.ins, self.stretch, self.outs)
         for xval in range(0, width - outs):
             for yval in range(0, height - outs):
                 above  = outpicarray[yval : yval + stretch, xval]
                 inside = outpicarray[yval + stretch : yval + ins + stretch, xval]
                 below  = outpicarray[yval + ins + stretch : yval + ins + 2 * stretch, xval]
-                print("(yval,xval) = ({0:d},{1:d})".format(yval, xval) )
+                #print("(yval,xval) = ({0:d},{1:d})".format(yval, xval) )
 
                 aav = above.sum()/self.stretch
                 insav = inside.sum()/self.ins
@@ -120,7 +121,7 @@ class Antikaro:
                 newval =  (aav + bav) / 2 # the new value for inside, if used at all
                 #newval = 0
 
-                print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
+                #print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
@@ -128,7 +129,7 @@ class Antikaro:
                     ypos = yval + idx
 
                     if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
-                        print("(y,xpos) = ({0:d},{1:d}) <- {2:f}".format(ypos, xval, newval) )
+                        #print("(y,xpos) = ({0:d},{1:d}) <- {2:f}".format(ypos, xval, newval) )
                         outpicarray[ypos][xval] = newval
                     else: # just copy orig data to newpic
                             outpicarray[ypos][xval] = outpicarray[ypos][xval]
@@ -159,12 +160,10 @@ def save_nparray_as_pic(nparr, filename):
 #####################################################
 
 
-
-foo = Antikaro("lemma.png")
-#foo = Antikaro("small.png")
-foo.set_ins(3)
-foo.set_stretch(3)
-#foo.transpose()
-foo.remove_lineature()
-#foo.transpose()
-foo.save("out.png")
+for filename in sys.argv[1:]:
+    foo = Antikaro(filename)
+    foo.set_ins(3)
+    foo.set_stretch(1)
+    foo.remove_lineature()
+    outfilename = "linrem_{0}".format(filename)
+    foo.save(outfilename)
