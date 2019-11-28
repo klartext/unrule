@@ -64,18 +64,25 @@ class Antikaro:
         bwpicarray = self.bwpa
         height, width = bwpicarray.shape
 
-        outs = self.outs
+        ins     = self.ins     # length inner part
+        stretch = self.stretch # "stretching" each side of inner by stretch
+        outs    = self.outs    # whole length of inner + 2 * stretched
+
         outpicarray = bwpicarray.copy()
 
         avdiff_low = 0
         avdiff_high = 15
+        print("ins, stretch, outs:", self.ins, self.stretch, self.outs)
 
 
-        for xval in range(outs, width - outs):
-            for yval in range(outs, height - outs):
+        for yval in range(outs, height - outs):
+            for xval in range(outs, width - outs):
 
-                left = bwpicarray[yval,  xval - outs : xval - 1]
-                right = bwpicarray[yval,  xval +1 : xval + outs]
+                #print("yval, xval", yval, xval)
+                left = bwpicarray[yval,  xval : xval + stretch]
+                right = bwpicarray[yval,  xval + ins + stretch : xval + ins + 2 * stretch]
+                #print("von - bis:", list(range(0,100))[xval : xval + stretch])
+                #print("von - bis:", list(range(0,100))[xval + ins + stretch : xval + ins + 2 * stretch])
 
                 lav = left.sum()/self.stretch
                 rav = right.sum()/self.stretch
@@ -95,8 +102,11 @@ class Antikaro:
         for yval in range(outs, height - outs):
             for xval in range(outs, width - outs):
 
+                #left = bwpicarray[yval,  xval - outs : xval - 1]
+                #right = bwpicarray[yval,  xval +1 : xval + outs]
                 above = bwpicarray[yval - outs : yval - 1, xval]
                 below = bwpicarray[yval +1 : yval + outs, xval]
+                #print("von - bis:", list(range(1,100))[yval +1 : yval + outs])
 
                 aav = above.sum()/self.stretch
                 bav = below.sum()/self.stretch
