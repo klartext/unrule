@@ -160,10 +160,16 @@ def save_nparray_as_pic(nparr, filename):
 #####################################################
 
 
-for filename in sys.argv[1:]:
+filelist = sys.argv[1:]
+
+print("Try to remove lineature from these files:", filelist)
+
+for filename in filelist:
+    print("working on file:", filename)
     foo = Antikaro(filename)
     foo.set_ins(3)
     foo.set_stretch(1)
     foo.remove_lineature()
     outfilename = "linrem_{0}".format(filename)
     foo.save(outfilename)
+    print("Resulting file:", outfilename)
