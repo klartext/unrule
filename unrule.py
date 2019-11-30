@@ -5,6 +5,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
+
+def moving_average(array, avlen):
+    """
+    array: the array that will be averaged over
+    avlen: the number of elements that go into the average (window-size)
+    """
+    convolutor = list(it.repeat(1,avlen)) # creates a list with avlen ones
+    return np.convolve(array, convolutor, 'valid')/avlen
+
+
+
 class Antikaro:
     def __init__(self, filename):
 
