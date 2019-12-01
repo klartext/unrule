@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 import sys
+import itertools as it
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -12,6 +13,8 @@ def moving_average(array, avlen):
     avlen: the number of elements that go into the average (window-size)
     """
     convolutor = list(it.repeat(1,avlen)) # creates a list with avlen ones
+    if avlen < 1:
+        avlen = 1
     return np.convolve(array, convolutor, 'valid')/avlen
 
 
@@ -88,19 +91,30 @@ class Antikaro:
 
 
         for yval in range(0, height - outs):
-            for xval in range(0, width - outs):
-                left   = bwpicarray[yval,  xval : xval + stretch]
-                inside = bwpicarray[yval,  xval + stretch : xval + ins + stretch]
-                right  = bwpicarray[yval,  xval + ins + stretch : xval + ins + 2 * stretch]
 
-                lav = left.sum()/self.stretch
-                insav = inside.sum()/self.ins
-                rav = right.sum()/self.stretch
+            print("\n")
+            # convolve() arbeitet nur auf 1D
+            # man muss die jew. Daten erst mal extrahieren...
+            print("yval:", yval)
+            print("create moving average")
+            print("Daten:", outpicarray[yval])
+            mvaver = moving_average(outpicarray[yval], self.stretch)
+            innermvav = moving_average(outpicarray[yval], self.ins)
+            print(mvaver)
+            print("moving average done")
+            print("-----------------------------------------------")
+
+            for xval in range(0, width - outs):
+                lav = mvaver[xval]
+                insav = innermvav[xval+stretch]
+                rav = mvaver[xval+stretch+ins]
+
+                #print("(yval, xval) = value: ({0:3d},{1:3d}) = {2:3d}     lav/insav/rav = {3:10.3f} / {4:10.3f} / {5:10.3f}:".format(yval, xval, outpicarray[yval][xval], lav, insav, rav))
+                #print("mvaver[xval], mvaver[xval+stretch], mvaver[]", mvaver[xval], mvaver[xval+stretch], mvaver[xval+stretch+ins])
+                #print("diffs", mvaver[xval] - lav, innermvav[xval+stretch] - insav, mvaver[xval+stretch+ins]-rav)
 
                 avdiff = (lav - rav)      # for decision if newval is used
                 newval =  (lav + rav) / 2 # the new value for inside, if used at all
-
-                #print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
@@ -116,23 +130,33 @@ class Antikaro:
         #self.outpicarray = outpicarray
         #return outpicarray
 
+        print("vertikal")
         #print("ins, stretch, outs:", self.ins, self.stretch, self.outs)
         for xval in range(0, width - outs):
             for yval in range(0, height - outs):
+
+                # keine Ahnung, wie ich aus dem outpicarray (numpy-2D-array)
+                # vertikal Daten raus bekomme - irgendwas mit Axis
+                data = np.transpose(outpicarray)[xval]
+                print("data:", data)
+                mvaver = moving_average(np.transpose(outpicarray)[xval], self.stretch) # so ist es wohl falsch
+
                 above  = outpicarray[yval : yval + stretch, xval]
                 inside = outpicarray[yval + stretch : yval + ins + stretch, xval]
                 below  = outpicarray[yval + ins + stretch : yval + ins + 2 * stretch, xval]
-                #print("(yval,xval) = ({0:d},{1:d})".format(yval, xval) )
+                #print("(yval,xval) = ({0:d},{1:d}): above / inside  below = ".format(yval, xval), above, inside, below )
 
                 aav = above.sum()/self.stretch
                 insav = inside.sum()/self.ins
                 bav = below.sum()/self.stretch
 
+                #print("mvaver[yval]", mvaver[xval])
+
                 avdiff = (aav - bav)      # for decision if newval is used
                 newval =  (aav + bav) / 2 # the new value for inside, if used at all
                 #newval = 0
 
-                #print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
+                print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
@@ -147,6 +171,7 @@ class Antikaro:
                             #outpicarray[ypos][xval] = newval - 10
 
 
+        print("===============================================")
         self.outpicarray = outpicarray
         return outpicarray
 
@@ -179,7 +204,7 @@ for filename in filelist:
     print("working on file:", filename)
     foo = Antikaro(filename)
     foo.set_ins(3)
-    foo.set_stretch(1)
+    foo.set_stretch(3)
     foo.remove_lineature()
     outfilename = "linrem_{0}".format(filename)
     foo.save(outfilename)
