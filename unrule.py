@@ -89,23 +89,14 @@ class Antikaro:
         print("ins, stretch, outs:", self.ins, self.stretch, self.outs)
 
 
-        print("whole data:\n", bwpicarray)
+        #print("whole data:\n", bwpicarray)
 
         # HORIZONTAL
         for yval in range(0, height - outs):
 
-            #print("\n")
-            # convolve() arbeitet nur auf 1D
-            # man muss die jew. Daten erst mal extrahieren...
-            #print("yval:", yval)
-            #print("create moving average")
-            #print("Daten:", outpicarray[yval])
             data      = outpicarray[yval]
             mvaver    = moving_average(data, self.stretch)
             innermvav = moving_average(data, self.ins)
-            #print(mvaver)
-            #print("moving average done")
-            #print("-----------------------------------------------")
 
             for xval in range(0, width - outs):
                 lav   = mvaver[xval]
@@ -121,50 +112,27 @@ class Antikaro:
                     xpos = xval + idx
 
                     if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
-                        #print("(y,xpos) = ({0:d},{1:d}) <- {2:f}".format(yval, xpos, newval) )
                         outpicarray[yval][xpos] = newval
                     else: # just copy orig data to newpic
                             outpicarray[yval][xpos] = bwpicarray[yval][xpos]
 
         # VERTIKAL
-        print("vertikal")
         for xval in range(0, width - outs):
 
-            #print("-----")
             # welche Methode ist schneller?
             #data = np.transpose(outpicarray)[xval] # funktioniert auch
             data = outpicarray[:,xval] # funktioniert
 
-            #print("yval / xval:", yval, " / ", xval)
-            #print("data:", data)
             mvaver      = moving_average(data, self.stretch)
             innermvaver = moving_average(data, self.ins)
 
             for yval in range(0, height - outs):
-
-
-                #above  = outpicarray[yval : yval + stretch, xval]
-                #inside = outpicarray[yval + stretch : yval + ins + stretch, xval]
-                #below  = outpicarray[yval + ins + stretch : yval + ins + 2 * stretch, xval]
-
-                #print("(yval,xval) = ({0:d},{1:d}): above / inside  below = ".format(yval, xval), above, inside, below )
-
-                #aav = above.sum()/self.stretch
-                #insav = inside.sum()/self.ins
-                #bav = below.sum()/self.stretch
                 aav   = mvaver[yval]
                 insav = innermvaver[yval + stretch]
                 bav   = mvaver[yval + stretch + ins ]
 
-                #print("aav: {0:f}, insav: {1:f}, bav: {2:f}".format(aav, insav, bav))
-                #print("(neues aav?)  mvaver[yval]:", mvaver[yval])
-                #print("(neues insav?)  innermvaver[yval + stretch]:", innermvaver[yval + stretch])
-                #print("(neues bav?)  mvaver[yval]:", mvaver[yval + stretch + ins ])
-
                 avdiff = (aav - bav)      # for decision if newval is used
                 newval =  (aav + bav) / 2 # the new value for inside, if used at all
-
-                #print("(y, x): ({0:4d},{1:4d}: insav -newval : {2:10f},   avdiff: {3:10f}".format(int(yval), int(xval), insav - newval, avdiff) )
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
@@ -172,14 +140,12 @@ class Antikaro:
                     ypos = yval + idx
 
                     if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
-                        #print("(y,xpos) = ({0:d},{1:d}) <- {2:f}".format(ypos, xval, newval) )
                         outpicarray[ypos][xval] = newval
                     else: # just copy orig data to newpic
                             outpicarray[ypos][xval] = outpicarray[ypos][xval]
-                            #outpicarray[ypos][xval] = newval - 10
 
 
-        print("===============================================")
+        #print("===============================================")
         self.outpicarray = outpicarray
         return outpicarray
 
