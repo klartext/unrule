@@ -108,13 +108,20 @@ class Antikaro:
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
+#(yval, xval) = ( 66,  59  -> avdiff = 65.666667, insav - newval: 32.833333)
+#(yval, xval) = ( 66,  60  -> avdiff = 75.000000, insav - newval: 21.833333)
+#(yval, xval) = ( 66,  61  -> avdiff = 75.000000, insav - newval: -3.166667)
+#(yval, xval) = ( 66,  62  -> avdiff = 75.000000, insav - newval: -28.166667)
+#
+                #print("(yval, xval) = ({0:3d}, {1:3d}  -> avdiff = {2:f}, insav - newval: {3:f})".format(yval, xval, avdiff, insav - newval) )
                 for idx in range(stretch + 1, stretch + ins + 1):
                     xpos = xval + idx
 
                     if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
                         outpicarray[yval][xpos] = newval
-                    else: # just copy orig data to newpic
-                            outpicarray[yval][xpos] = bwpicarray[yval][xpos]
+                    # ist doch sowieso schon da drin!
+                    #else: # just copy orig data to newpic
+                    #        outpicarray[yval][xpos] = bwpicarray[yval][xpos]
 
         # VERTIKAL
         for xval in range(0, width - outs):
@@ -136,13 +143,15 @@ class Antikaro:
 
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
+                #print("(yval, xval) = ({0:3d}, {1:3d}  -> avdiff = {2:f}, insav - newval: {3:f})".format(yval, xval, avdiff, insav - newval) )
                 for idx in range(stretch + 1, stretch + ins + 1):
                     ypos = yval + idx
 
                     if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
                         outpicarray[ypos][xval] = newval
-                    else: # just copy orig data to newpic
-                            outpicarray[ypos][xval] = outpicarray[ypos][xval]
+                    # ist doch sowieso schon da drin
+                    #else: # just copy orig data to newpic
+                    #        outpicarray[ypos][xval] = outpicarray[ypos][xval]
 
 
         #print("===============================================")
@@ -177,7 +186,7 @@ print("Try to remove lineature from these files:", filelist)
 for filename in filelist:
     print("working on file:", filename)
     foo = Antikaro(filename)
-    foo.set_ins(3)
+    foo.set_ins(5)
     foo.set_stretch(3)
     foo.remove_lineature()
     outfilename = "linrem_{0}".format(filename)
