@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
+import argparse
+
 
 def moving_average(array, avlen):
     """
@@ -177,16 +179,37 @@ def save_nparray_as_pic(nparr, filename):
 
 #####################################################
 
+# initiate the parser
+programinfo = "This program removes lineature-patterns from an image."
+parser = argparse.ArgumentParser( description = programinfo )
 
-filelist = sys.argv[1:]
+parser.add_argument("--ins", "-i", default=3, help="set inside-width in pixel")
+parser.add_argument("--stretch", "-s", default=3, help="set stretch-width (pixels left and right of ins)")
+parser.add_argument('filenames', metavar='F', type=str, nargs='+', help='Filenames')
 
-print("Try to remove lineature from these files:", filelist)
 
-for filename in filelist:
+args = parser.parse_args()
+
+print("---------------")
+print(args)
+print("---------------")
+print("args.filenames):", args.filenames)
+
+
+#filelist = sys.argv[1:]
+
+print("Try to remove lineature from these files:", args.filenames)
+
+for filename in args.filenames:
     print("working on file:", filename)
     foo = Antikaro(filename)
-    foo.set_ins(5)
-    foo.set_stretch(3)
+
+#    if args.ins:
+#        foo.set_ins(int(args.ins))
+#
+#    if args.stretch:
+#        foo.set_stretch(int(args.stretch))
+
     foo.remove_lineature()
     outfilename = "linrem_{0}".format(filename)
     foo.save(outfilename)
