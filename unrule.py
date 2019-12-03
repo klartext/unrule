@@ -114,10 +114,9 @@ class Antikaro:
 #(yval, xval) = ( 66,  62  -> avdiff = 75.000000, insav - newval: -28.166667)
 #
                 #print("(yval, xval) = ({0:3d}, {1:3d}  -> avdiff = {2:f}, insav - newval: {3:f})".format(yval, xval, avdiff, insav - newval) )
-                for idx in range(stretch + 1, stretch + ins + 1):
-                    xpos = xval + idx
-
-                    if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
+                if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
+                    for idx in range(stretch + 1, stretch + ins + 1):
+                        xpos = xval + idx
                         outpicarray[yval][xpos] = newval
                     # ist doch sowieso schon da drin!
                     #else: # just copy orig data to newpic
@@ -144,10 +143,10 @@ class Antikaro:
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
                 #print("(yval, xval) = ({0:3d}, {1:3d}  -> avdiff = {2:f}, insav - newval: {3:f})".format(yval, xval, avdiff, insav - newval) )
-                for idx in range(stretch + 1, stretch + ins + 1):
-                    ypos = yval + idx
+                if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
+                    for idx in range(stretch + 1, stretch + ins + 1):
+                        ypos = yval + idx
 
-                    if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
                         outpicarray[ypos][xval] = newval
                     # ist doch sowieso schon da drin
                     #else: # just copy orig data to newpic
