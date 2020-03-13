@@ -15,6 +15,8 @@ def moving_average(array, avlen):
     array: the array that will be averaged over
     avlen: the number of elements that go into the average (window-size)
     """
+    if avlen < 1:
+        avlen = 1
     convolutor = list(it.repeat(1,avlen)) # creates a list with avlen ones
     if avlen < 1:
         avlen = 1
