@@ -5,6 +5,7 @@ import itertools as it
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+from time import perf_counter as pc
 
 import argparse
 
@@ -20,6 +21,12 @@ def moving_average(array, avlen):
     return np.convolve(array, convolutor, 'valid')/avlen
 
 
+def value_in_interval( value, interval ):
+    low, high = interval
+    if low <= value and value <= high:
+        return True
+    else:
+        return False
 
 class Antikaro:
     def __init__(self, filename):
@@ -31,7 +38,7 @@ class Antikaro:
         self.height, self.width = bwpicarray.shape
 
         # set defaults
-        self.ins = 1
+        self.ins = 2
         self.stretch = 2
         self.calc_outs()
 
@@ -75,6 +82,8 @@ class Antikaro:
 
 
 
+    # Here the main work will be done
+    # ===============================
     def remove_lineature(self):
 
         bwpicarray = self.bwpa
@@ -116,9 +125,12 @@ class Antikaro:
 #(yval, xval) = ( 66,  62  -> avdiff = 75.000000, insav - newval: -28.166667)
 #
                 #print("(yval, xval) = ({0:3d}, {1:3d}  -> avdiff = {2:f}, insav - newval: {3:f})".format(yval, xval, avdiff, insav - newval) )
-                if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
+                if value_in_interval(avdiff, [-10,10]) and  value_in_interval(insav - newval, [-50, -1]):
+                #    print("(yval, xval) = ({0:3d}, {1:3d}  -> avdiff = {2:f}, insav - newval: {3:f})".format(yval, xval, avdiff, insav - newval) )
                     for idx in range(stretch + 1, stretch + ins + 1):
-                        xpos = xval + idx
+                        xpos = xval + idx - int(ins/2) # ins/2 abziehen, weil nicht nur nach vorne abziehen (???)
+
+                        #newval = 0
                         outpicarray[yval][xpos] = newval
                     # ist doch sowieso schon da drin!
                     #else: # just copy orig data to newpic
@@ -145,14 +157,12 @@ class Antikaro:
                 # Standardabweichung noch checken -> wenn zu groß, dann nicht verändern
 
                 #print("(yval, xval) = ({0:3d}, {1:3d}  -> avdiff = {2:f}, insav - newval: {3:f})".format(yval, xval, avdiff, insav - newval) )
-                if abs(avdiff) < 10 and  -40 < insav - newval and insav - newval < 0: # copy new value to newpic
+                if value_in_interval(avdiff, [-10,10]) and  value_in_interval(insav - newval, [-50, -1]):
                     for idx in range(stretch + 1, stretch + ins + 1):
-                        ypos = yval + idx
+                        ypos = yval + idx - int(ins/2) # ins/2 abziehen, weil nicht nur nach vorne abziehen (???)
 
+                        #newval = 0
                         outpicarray[ypos][xval] = newval
-                    # ist doch sowieso schon da drin
-                    #else: # just copy orig data to newpic
-                    #        outpicarray[ypos][xval] = outpicarray[ypos][xval]
 
 
         #print("===============================================")
@@ -185,7 +195,7 @@ parser = argparse.ArgumentParser( description = programinfo )
 
 parser.add_argument("--ins", "-i", default=3, help="set inside-width in pixel")
 parser.add_argument("--stretch", "-s", default=3, help="set stretch-width (pixels left and right of ins)")
-parser.add_argument('filenames', metavar='F', type=str, nargs='+', help='Filenames')
+parser.add_argument('filenames', metavar='infile', type=str, nargs='+', help='Filenames')
 
 
 args = parser.parse_args()
@@ -196,19 +206,20 @@ print("---------------")
 print("args.filenames):", args.filenames)
 
 
-#filelist = sys.argv[1:]
-
 print("Try to remove lineature from these files:", args.filenames)
 
 for filename in args.filenames:
     print("working on file:", filename)
+    t0 = pc()
     foo = Antikaro(filename)
+    t1 = pc()
+    print("# Antikaro-Init: {:8.3f}".format(t1 - t0), file=sys.stdout, flush=True)
 
-#    if args.ins:
-#        foo.set_ins(int(args.ins))
-#
-#    if args.stretch:
-#        foo.set_stretch(int(args.stretch))
+    if args.ins:
+        foo.set_ins(int(args.ins))
+
+    if args.stretch:
+        foo.set_stretch(int(args.stretch))
 
     foo.remove_lineature()
     outfilename = "linrem_{0}".format(filename)
