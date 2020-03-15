@@ -22,9 +22,29 @@ def moving_average(array, avlen):
     if avlen < 1:
         avlen = 1
     convolutor = list(it.repeat(1,avlen)) # creates a list with avlen ones
-    if avlen < 1:
-        avlen = 1
     return np.convolve(array, convolutor, 'valid')/avlen
+
+
+def moving_average_with_diff(array, stretch, inner_len):
+    """
+    """
+    if stretch < 1:
+        stretch = 1
+
+    # mean-diff-conv
+    leftconv  = (np.repeat(1/stretch, stretch)) # creates a list with stretch ones
+    inbetween        = (np.repeat(0, inner_len))
+    rightconv = (np.repeat(-1/stretch, stretch)) # creates a list with stretch ones
+
+    conv_avdiff = np.concatenate((leftconv, inbetween, rightconv))
+    diff = np.convolve(array, conv_avdiff, 'valid') * (-1) # (-1) because left-right was used for avdiff
+
+    # mean-conv
+    meanconv  = np.repeat(1/(2*stretch), stretch)
+    conv_mean = np.concatenate((meanconv, inbetween, meanconv))
+    mean = np.convolve(array, conv_mean, 'valid')
+
+    return diff, mean
 
 
 def value_in_interval( value, interval ):
