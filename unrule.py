@@ -9,6 +9,10 @@ from time import perf_counter as pc
 
 import argparse
 
+np.set_printoptions(threshold=sys.maxsize, linewidth=200) # numpy-options
+np.set_printoptions(formatter={'int': '{: 7d}'.format, 'float': '{: 0.3f}'.format})
+
+
 
 def moving_average(array, avlen):
     """
