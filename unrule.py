@@ -55,7 +55,7 @@ def value_in_interval( value, interval ):
         return False
 
 class Antikaro:
-    def __init__(self, filename):
+    def __init__(self, filename, stretch=2, ins=2):
 
         self.filename = filename
         self.bwpa = readimage_as_grayval_to_array(filename)
@@ -64,9 +64,13 @@ class Antikaro:
         self.height, self.width = bwpicarray.shape
 
         # set defaults
-        self.ins = 2
-        self.stretch = 2
+        self.ins = ins
+        self.stretch = stretch
         self.calc_outs()
+
+        if self.height < 2 * self.stretch + self.ins or self.width < 2 * self.stretch + self.ins:
+            print("Image {}  too small for stretch-/ins-settings".format(filename), file=sys.stderr)
+            raise ValueError
 
         #self.outpicarray = self.remove_lineature()
         if False:
@@ -231,23 +235,20 @@ print(args)
 print("---------------")
 print("args.filenames):", args.filenames)
 
-
 print("Try to remove lineature from these files:", args.filenames)
+
 
 for filename in args.filenames:
     print("working on file:", filename)
-    t0 = pc()
-    foo = Antikaro(filename)
-    t1 = pc()
-    print("# Antikaro-Init: {:8.3f}".format(t1 - t0), file=sys.stdout, flush=True)
+    try:
+        t0 = pc()
+        foo = Antikaro(filename, int(args.stretch), int(args.ins))
+        t1 = pc()
 
-    if args.ins:
-        foo.set_ins(int(args.ins))
+        foo.remove_lineature()
+        outfilename = "linrem_{0}".format(filename)
+        foo.save(outfilename)
+        print("Resulting file:", outfilename)
 
-    if args.stretch:
-        foo.set_stretch(int(args.stretch))
-
-    foo.remove_lineature()
-    outfilename = "linrem_{0}".format(filename)
-    foo.save(outfilename)
-    print("Resulting file:", outfilename)
+    except ValueError:
+        continue
