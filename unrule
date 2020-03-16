@@ -18,6 +18,7 @@ np.set_printoptions(formatter={'int': '{: 7d}'.format, 'float': '{: 6.3f}'.forma
 def pdl(data, comment):
     """
     print data and length with comment
+    (mainly for developing reasons)
     """
     print("length of {:12s}= {}".format(comment, len(data)))
     print("{:10s}{:12s}= {}".format("", comment, data))
@@ -36,36 +37,57 @@ def moving_average(array, avlen):
 
 def moving_average_with_diff(array, stretch, inner_len):
     """
+    For the two windows: left and right outside windows calculate:
+      - mean of pixels of both windows
+      - difference of the seperate means fo these windows
     """
+
+    # sanitize parameters
+    # -------------------
     if stretch < 1:
         stretch = 1
+    if inner_len < 1:
+        inner_len = 1
 
-    # mean-diff-conv
-    leftconv  = (np.repeat(1/stretch, stretch)) # creates a list with stretch ones
-    inbetween        = (np.repeat(0, inner_len))
-    rightconv = (np.repeat(-1/stretch, stretch)) # creates a list with stretch ones
+    # mean-diff-conv window
+    leftconv  = (np.repeat(1/stretch, stretch))  # list with stretch ones
+    inbetween = (np.repeat(0, inner_len))        # inner window is to be ignored
+    rightconv = (np.repeat(-1/stretch, stretch)) # list with stretch ones
+    conv_avdiff = np.concatenate((leftconv, inbetween, rightconv)) # whole window
 
-    conv_avdiff = np.concatenate((leftconv, inbetween, rightconv))
+    # calculate the diff of the moving averages of left and right outer windows
     diff = np.convolve(array, conv_avdiff, 'valid') * (-1) # (-1) because left-right was used for avdiff
-    #print("conv_avdiff:", conv_avdiff)
 
-    # mean-conv
+    # --------------------
+
+    # mean-conv window
     meanconv  = np.repeat(1/(2*stretch), stretch)
-    conv_mean = np.concatenate((meanconv, inbetween, meanconv))
+    conv_mean = np.concatenate((meanconv, inbetween, meanconv)) # whole window
+
+    # calculate mean of the left and right outer window
     mean = np.convolve(array, conv_mean, 'valid')
-    #print("conv_mean:  ", conv_mean)
 
     return diff, mean
 
 
 def value_in_interval( value, interval ):
+    """
+    check if a value lies inside an interval
+    (old function, might be removed later)
+    """
     low, high = interval
     if low <= value and value <= high:
         return True
     else:
         return False
 
+
 class Antikaro:
+    """
+    This class does the main work of removing the rulers.
+    Antikaro: Anti means against; Karo is german word for rhombus.
+    Kariert (Karo-like): colloquialism for quadratic lineature of a paper.
+    """
     def __init__(self, filename, stretch=2, ins=2):
 
         self.filename = filename
@@ -75,10 +97,11 @@ class Antikaro:
         self.height, self.width = bwpicarray.shape
 
         # set defaults
-        self.ins = ins
-        self.stretch = stretch
-        self.calc_outs()
+        self.ins = ins         # inner area: number of pixels
+        self.stretch = stretch # num. of pixels of left as well as right outer window
+        self.calc_outs()       # calculate the whole number of pixels of the windows
 
+        # check parameters compared to size of the image.
         if self.height < 2 * self.stretch + self.ins or self.width < 2 * self.stretch + self.ins:
             print("Image {}  too small for stretch-/ins-settings".format(filename), file=sys.stderr)
             raise ValueError
@@ -91,69 +114,114 @@ class Antikaro:
 
 
     def calc_outs(self):
+        """
+        calculate sum of the number of pixels of the
+        left and right outer and the inner windows.
+        """
         self.outs = 2 * self.stretch + self.ins
 
+
     def set_stretch(self, stretch):
+        """
+        set the size of the left as well as the right outer window
+        """
         self.stretch = stretch
         self.calc_outs()
 
+
     def set_ins(self, ins):
+        """
+        set the value of the inner window (number of pixels of the Karo-lines)
+        """
         self.ins = ins
         self.calc_outs()
 
+
     def set_avdiff_lower(self, lowval):
+        """
+        setting lower threshold level for the decision, which pixels to replace
+        (not in use so far - hardcoded values are used atm)
+        """
         self.avdiff_lower = lowval
 
+
     def set_avdiff_higher(self, highval):
+        """
+        setting higher threshold level for the decision, which pixels to replace
+        (not in use so far - hardcoded values are used atm)
+        """
         self.avdiff_higher = highval
 
+
     def save(self, outfilename):
+        """
+        save the picture, represented by the outpicarray to an image file
+        """
         save_nparray_as_pic(self.outpicarray, outfilename)
 
+
     def save2(self, outfilename):
+        """
+        (not in use so far; possibly old stuf that can be removed)
+        """
         if not hasattr(self, outpicarray):
             print("No output array was created. Using the original picture")
             save_nparray_as_pic(self.bwpa, outfilename)
         else:
             save_nparray_as_pic(self.outpicarray, outfilename)
 
+
     def transpose(self):
-        self.bwpa = np.transpose(self.bwpa)
+        """
+        transpose image data
+        """
+        self.bwpa        = np.transpose(self.bwpa)
         self.outpicarray = np.transpose(self.outpicarray)
 
 
 
     def patch_linedata(self, linedata):
+        """
+        Depending on the settings and (so far hard coded) thresholds
+        replace the karo-line by the average color value of the outer windows.
+        This function awaits linedata (scanline in jpeglib-speech) and returns
+        the patched linedata.
+
+        in-place modification of the linedata array
+
+        Possible enhancement:
+          read linedata, but patch a copy to avoid mixing
+          already read and changed data.
+        """
         # for lazy typing
         ins     = self.ins     # length inner part
-        stretch = self.stretch # "stretching" each side of inner by stretch
+        stretch = self.stretch # left and right outer window size
 
-        dlen = len(linedata)
-
-        mvaver    = moving_average(linedata, stretch) # kann spaeter weg
-        innermvav = moving_average(linedata[stretch : -stretch], ins)     # kann spaeter weg
-
+        innermvav = moving_average(linedata[stretch : -stretch], ins) # inside-win average
         averdiff_arr, newval_arr = moving_average_with_diff(linedata, stretch, ins)
 
         if False: # need to think about this rounding again
-            mvaver        +=  0.5
             innermvav     +=  0.5
             averdiff_arr  +=  0.5
             newval_arr    +=  0.5
 
-        subwin = linedata[stretch : -stretch]
+        subwin = linedata[stretch : -stretch] # only this area can be corrected
 
+        # Threshold testing on which areas to replace
+        # -------------------------------------------
         # find the indexes where changes need to be done
         # (hard coded values, I know it's bad - remove if parametrisation makes sense)
+        # -------------------------------------------
         wo = np.where((averdiff_arr < 10) & (averdiff_arr > -10) &
                       (innermvav - newval_arr > -50) & (innermvav - newval_arr < -1))
 
-        # set new values for all ins entries
+        # set new values for all ins entries, according to the 'wo' window
+        # ----------------------------------------------------------------
         for offset in range(ins):
             bidxa = (offset + wo[0],)
             subwin[bidxa] = newval_arr[wo] # Set the new values
 
-        return linedata
+        return
 
 
 
@@ -161,6 +229,9 @@ class Antikaro:
     # ===============================
     def remove_lineature(self):
 
+        """
+        Birds perspective algorithm of removing the karos.
+        """
         bwpicarray = self.bwpa
         height, width = bwpicarray.shape
 
@@ -175,8 +246,6 @@ class Antikaro:
         avdiff_high = 0
         print("stretch, ins, outs:", self.stretch, self.ins, self.outs)
 
-
-
         #print("whole linedata:\n", bwpicarray)
 
         # HORIZONTAL
@@ -184,7 +253,7 @@ class Antikaro:
         for yval in range(0, height - outs):
 
             linedata      = outpicarray[yval]
-            linedata = self.patch_linedata(linedata)
+            self.patch_linedata(linedata) # the actual data patch
             outpicarray[yval] = linedata
 
         t1 = pc()
@@ -194,7 +263,7 @@ class Antikaro:
         for xval in range(0, width - outs):
 
             linedata      = outpicarray[:,xval]
-            linedata = self.patch_linedata(linedata)
+            self.patch_linedata(linedata) # the actual data patch
             outpicarray[:,xval] = linedata
 
         t2 = pc()
@@ -221,8 +290,9 @@ def save_nparray_as_pic(nparr, filename):
 
 #####################################################
 
-# initiate the parser
-programinfo = "This program removes lineature-patterns from an image."
+# initiate the cli-args parser
+# ----------------------------
+programinfo = "This program removes lineature-patterns from an image. (output is black/white image)"
 parser = argparse.ArgumentParser( description = programinfo )
 
 parser.add_argument("--ins", "-i", default=3, help="set inside-width in pixel")
