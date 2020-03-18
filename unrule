@@ -325,7 +325,7 @@ for filename in args.filenames:
         t1 = pc()
 
         foo.remove_lineature()
-        outfilename = "linrem_{0}".format(filename)
+        outfilename = "unruled_{0}".format(filename)
         foo.save(outfilename)
         print("Resulting file:", outfilename)
 
