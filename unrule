@@ -1,7 +1,14 @@
-#! /usr/bin/python
+#!/usr/bin/python
 #
 # vim: filetype=python
-
+# ===========================================================================
+# Tool unrule: remove rulers from scanned images
+# ---------------------------------------------------------------------------
+# Copyright: Oliver Bandel
+# Copyleft:  GNU GPL v3 or higher/later version
+#
+# Use this software at your own risk.
+# ===========================================================================
 import sys
 import itertools as it
 import matplotlib.pyplot as plt
