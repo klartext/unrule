@@ -19,7 +19,14 @@ The inner window is **ins** (for inside) pixels wide.
 The left and right outer windows are each **stretch** pixels wide.
 
 
-## Preconditions
+# Preconditions
+
+## Packages
+numpy,
+matplotlib,
+PIL (PILLOW) (?)
+
+## Image-Data
 The lineature must be aligned with the image, so a rotated scan will very
 likely not give useful results.
 
@@ -29,7 +36,7 @@ please let me know via Github-issues.
 
 
 
-## Usage
+# Usage
 
 Call **unrule** on the command line with the filenames as arguments.
 There are also two parameters:
