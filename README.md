@@ -57,7 +57,7 @@ The default settings are:
 **ins** = 3
 
 This gives a complete window size of stretch + ins + stretch = 3 + 3 + 3 = 9.
-So the window is 90 pixels, and the inside window-part is 3 pixels wide.
+So the window is 9 pixels, and the inside window-part is 3 pixels wide.
 
 To get useful results, the number of pixels of the lineature (horizontal and/or vertical rule)
 is the value that must be set as **ins** value.
