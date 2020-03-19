@@ -26,7 +26,7 @@ At the moment, the output is a black-/white image.
 ## Packages
 numpy,
 matplotlib,
-PIL (PILLOW) (?)
+PIL (Python Pillow)
 
 ## Image-Data
 The lineature must be aligned with the image, so a rotated scan will very
