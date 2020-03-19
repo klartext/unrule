@@ -18,6 +18,8 @@ should be changed to the average of the left and right outer windows.
 The inner window is **ins** (for inside) pixels wide.
 The left and right outer windows are each **stretch** pixels wide.
 
+At the moment, the output is a black-/white image.
+
 
 # Preconditions
 
