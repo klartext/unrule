@@ -108,6 +108,9 @@ class Antikaro:
         self.stretch = stretch # num. of pixels of left as well as right outer window
         self.calc_outs()       # calculate the whole number of pixels of the windows
 
+        self.avdiff_range = (-10,10) # threshold for diff between left and right
+        self.inner_newdiff_range = (-50, -1) # diff between old and new inner
+
         # check parameters compared to size of the image.
         if self.height < 2 * self.stretch + self.ins or self.width < 2 * self.stretch + self.ins:
             print("Image {}  too small for stretch-/ins-settings".format(filename), file=sys.stderr)
@@ -189,6 +192,10 @@ class Antikaro:
         ins     = self.ins     # length inner part
         stretch = self.stretch # left and right outer window size
 
+        # extract thresholds
+        avdiff_low, avdiff_high = self.avdiff_range
+        innernewdiff_low, innernewdiff_high = self.inner_newdiff_range
+
         innermvav = moving_average(linedata[stretch : -stretch], ins) # inside-win average
         averdiff_arr, newval_arr = moving_average_with_diff(linedata, stretch, ins)
 
@@ -204,8 +211,10 @@ class Antikaro:
         # find the indexes where changes need to be done
         # (hard coded values, I know it's bad - remove if parametrisation makes sense)
         # -------------------------------------------
-        wo = np.where((averdiff_arr < 10) & (averdiff_arr > -10) &
-                      (innermvav - newval_arr > -50) & (innermvav - newval_arr < -1))
+        wo = np.where((averdiff_arr > avdiff_low) &
+                      (averdiff_arr < avdiff_high) &
+                      (innermvav - newval_arr > innernewdiff_low) &
+                      (innermvav - newval_arr < innernewdiff_high))
 
         # set new values for all ins entries, according to the 'wo' window
         # ----------------------------------------------------------------
@@ -229,8 +238,6 @@ class Antikaro:
 
         outpicarray = bwpicarray.copy()
 
-        avdiff_low = -20
-        avdiff_high = 0
         print("stretch, ins, outs:", self.stretch, self.ins, self.outs)
 
         #print("whole linedata:\n", bwpicarray)
