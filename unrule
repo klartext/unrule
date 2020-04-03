@@ -11,12 +11,12 @@
 # ===========================================================================
 import sys
 import itertools as it
-import matplotlib.pyplot as plt
+#from time import perf_counter as pc
+import argparse
+
 import numpy as np
 from PIL import Image
-from time import perf_counter as pc
 
-import argparse
 
 np.set_printoptions(threshold=sys.maxsize, linewidth=200) # numpy-options
 np.set_printoptions(formatter={'int': '{: 7d}'.format, 'float': '{: 6.3f}'.format})
@@ -98,10 +98,9 @@ class Antikaro:
     def __init__(self, filename, stretch=2, ins=2):
 
         self.filename = filename
-        self.bwpa = readimage_as_grayval_to_array(filename)
-        bwpicarray = self.bwpa
-        #self.bwpicarray = bwpicarr
-        self.height, self.width = bwpicarray.shape
+        self.bwpicarray = readimage_as_grayval_to_array(filename)
+        self.height, self.width = self.bwpicarray.shape
+        self.outpicarray = None
 
         # set defaults
         self.ins = ins         # inner area: number of pixels
@@ -156,15 +155,6 @@ class Antikaro:
         save_nparray_as_pic(self.outpicarray, outfilename)
 
 
-    def save2(self, outfilename):
-        """(not in use so far; possibly old stuf that can be removed)"""
-        if not hasattr(self, outpicarray):
-            print("No output array was created. Using the original picture")
-            save_nparray_as_pic(self.bwpa, outfilename)
-        else:
-            save_nparray_as_pic(self.outpicarray, outfilename)
-
-
     def patch_linedata(self, linedata):
         """
         Depending on the settings and (so far hard coded) thresholds
@@ -189,10 +179,10 @@ class Antikaro:
         innermvav = moving_average(linedata[stretch : -stretch], ins) # inside-win average
         averdiff_arr, newval_arr = moving_average_with_diff(linedata, stretch, ins)
 
-        if False: # need to think about this rounding again
-            innermvav     +=  0.5
-            averdiff_arr  +=  0.5
-            newval_arr    +=  0.5
+        #if False: # need to think about this rounding again
+        #    innermvav     +=  0.5
+        #    averdiff_arr  +=  0.5
+        #    newval_arr    +=  0.5
 
         subwin = linedata[stretch : -stretch] # only this area can be corrected
 
@@ -201,21 +191,14 @@ class Antikaro:
         # find the indexes where changes need to be done
         # (hard coded values, I know it's bad - remove if parametrisation makes sense)
         # -------------------------------------------
-        wo = np.where((avdiff_low < averdiff_arr < avdiff_high) &
-                      (innernewdiff_low < (innermvav - newval_arr) < innernewdiff_high))
+        where = np.where((avdiff_low < averdiff_arr < avdiff_high) &
+                         (innernewdiff_low < (innermvav - newval_arr) < innernewdiff_high))
 
-        #wo = np.where((averdiff_arr > avdiff_low) &
-        #              (averdiff_arr < avdiff_high) &
-        #              (innermvav - newval_arr > innernewdiff_low) &
-        #              (innermvav - newval_arr < innernewdiff_high))
-
-        # set new values for all ins entries, according to the 'wo' window
+        # set new values for all ins entries, according to the 'where' window
         # ----------------------------------------------------------------
         for offset in range(ins):
-            bidxa = (offset + wo[0],)
-            subwin[bidxa] = newval_arr[wo] # Set the new values
-
-        return
+            bidxa = (offset + where[0],)
+            subwin[bidxa] = newval_arr[where] # Set the new values
 
 
 
@@ -223,7 +206,7 @@ class Antikaro:
     # ===============================
     def remove_lineature(self):
         """Birds perspective algorithm of removing the karos."""
-        bwpicarray = self.bwpa
+        bwpicarray = self.bwpicarray
         height, width = bwpicarray.shape
 
         outpicarray = bwpicarray.copy()
@@ -233,15 +216,15 @@ class Antikaro:
         #print("whole linedata:\n", bwpicarray)
 
         # HORIZONTAL
-        t0 = pc()
+        #t_0 = pc()
         for yval in range(0, height - self.outs):
 
             linedata      = outpicarray[yval]
             self.patch_linedata(linedata) # the actual data patch
             outpicarray[yval] = linedata
 
-        t1 = pc()
-        #print("# HORIZONTAL: {:8.3f}".format(t1 - t0), file=sys.stderr, flush=True)
+        #t_1 = pc()
+        #print("# HORIZONTAL: {:8.3f}".format(t_1 - t_0), file=sys.stderr, flush=True)
 
         # VERTIKAL
         for xval in range(0, width - self.outs):
@@ -250,8 +233,8 @@ class Antikaro:
             self.patch_linedata(linedata) # the actual data patch
             outpicarray[:,xval] = linedata
 
-        t2 = pc()
-        #print("# VERTIKAL: {:8.3f}".format(t2 - t1), file=sys.stderr, flush=True)
+        #t_2 = pc()
+        #print("# VERTIKAL: {:8.3f}".format(t_2 - t_1), file=sys.stderr, flush=True)
 
         #print("===============================================")
         self.outpicarray = outpicarray
@@ -259,15 +242,18 @@ class Antikaro:
 
 
 def readimage_to_array(filename):
+    """Returning numpy-array of image in file 'filename'"""
     pic = Image.open(filename)
     return np.array(pic)
 
 def readimage_as_grayval_to_array(filename):
+    """Returning numpy-array of (b/w converted) image from file 'filename'"""
     pic = Image.open(filename)
     pic_grayval = pic.convert('L')
     return np.array(pic_grayval)
 
 def save_nparray_as_pic(nparr, filename):
+    """Save the image in nparr as image-file to file 'filename'"""
     newimage = Image.fromarray(nparr)
     newimage.save(filename)
 
@@ -276,8 +262,8 @@ def save_nparray_as_pic(nparr, filename):
 
 # initiate the cli-args parser
 # ----------------------------
-programinfo = "This program removes lineature-patterns from an image. (output is black/white image)"
-parser = argparse.ArgumentParser(description = programinfo)
+PROGRAMINFO = "This program removes lineature-patterns from an image. (output is black/white image)"
+parser = argparse.ArgumentParser(description = PROGRAMINFO)
 
 parser.add_argument("--ins", "-i", default=3, help="set inside-width in pixel")
 parser.add_argument("--stretch", "-s", default=3, help="set stretch-width (pixels left and right of ins)")
@@ -297,9 +283,9 @@ print("Try to remove lineature from these files:", args.filenames)
 for filename in args.filenames:
     print("working on file:", filename)
     try:
-        t0 = pc()
+        #t_0 = pc()
         image = Antikaro(filename, int(args.stretch), int(args.ins))
-        t1 = pc()
+        #t_1 = pc()
 
         image.remove_lineature()
         outfilename = "unruled_{0}".format(filename)
