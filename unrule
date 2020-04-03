@@ -38,7 +38,7 @@ def moving_average(array, avlen):
     """
     if avlen < 1:
         avlen = 1
-    convolutor = list(it.repeat(1,avlen)) # creates a list with avlen ones
+    convolutor = list(it.repeat(1, avlen)) # creates a list with avlen ones
     return np.convolve(array, convolutor, 'valid')/avlen
 
 
@@ -77,7 +77,7 @@ def moving_average_with_diff(array, stretch, inner_len):
     return diff, mean
 
 
-def value_in_interval( value, interval ):
+def value_in_interval(value, interval):
     """
     check if a value lies inside an interval
     (old function, might be removed later)
@@ -112,12 +112,6 @@ class Antikaro:
         if self.height < 2 * self.stretch + self.ins or self.width < 2 * self.stretch + self.ins:
             print("Image {}  too small for stretch-/ins-settings".format(filename), file=sys.stderr)
             raise ValueError
-
-        #self.outpicarray = self.remove_lineature()
-        if False:
-            outpicarray = np.transpose(outpicarray)
-            outpicarray = self.remove_lineature(outpicarray)
-            outpicarray = np.transpose(outpicarray)
 
 
     def calc_outs(self):
@@ -286,7 +280,7 @@ def save_nparray_as_pic(nparr, filename):
 # initiate the cli-args parser
 # ----------------------------
 programinfo = "This program removes lineature-patterns from an image. (output is black/white image)"
-parser = argparse.ArgumentParser( description = programinfo )
+parser = argparse.ArgumentParser(description = programinfo)
 
 parser.add_argument("--ins", "-i", default=3, help="set inside-width in pixel")
 parser.add_argument("--stretch", "-s", default=3, help="set stretch-width (pixels left and right of ins)")
@@ -307,12 +301,12 @@ for filename in args.filenames:
     print("working on file:", filename)
     try:
         t0 = pc()
-        foo = Antikaro(filename, int(args.stretch), int(args.ins))
+        image = Antikaro(filename, int(args.stretch), int(args.ins))
         t1 = pc()
 
-        foo.remove_lineature()
+        image.remove_lineature()
         outfilename = "unruled_{0}".format(filename)
-        foo.save(outfilename)
+        image.save(outfilename)
         print("Resulting file:", outfilename)
 
     except ValueError:
