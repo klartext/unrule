@@ -106,10 +106,10 @@ class Antikaro:
         # set defaults
         self.ins = ins         # inner area: number of pixels
         self.stretch = stretch # num. of pixels of left as well as right outer window
-        self.calc_outs()       # calculate the whole number of pixels of the windows
+        self._calc_outs()       # calculate the whole number of pixels of the windows
 
         self.avdiff_range = (-10,10) # threshold for diff between left and right
-        self.inner_newdiff_range = (-50, -1) # diff between old and new inner
+        self.innernewdiff_range = (-50, -1) # diff between old and new inner
 
         # check parameters compared to size of the image.
         if self.height < 2 * self.stretch + self.ins or self.width < 2 * self.stretch + self.ins:
@@ -117,7 +117,7 @@ class Antikaro:
             raise ValueError
 
 
-    def calc_outs(self):
+    def _calc_outs(self):
         """
         calculate sum of the number of pixels of the
         left and right outer and the inner windows.
@@ -126,48 +126,38 @@ class Antikaro:
 
 
     def set_stretch(self, stretch):
-        """
-        set the size of the left as well as the right outer window
-        """
+        """set the size of the left as well as the right outer window"""
         self.stretch = stretch
-        self.calc_outs()
+        self._calc_outs()
 
 
     def set_ins(self, ins):
-        """
-        set the value of the inner window (number of pixels of the Karo-lines)
-        """
+        """set the value of the inner window (number of pixels of the Karo-lines)"""
         self.ins = ins
-        self.calc_outs()
+        self._calc_outs()
 
 
-    def set_avdiff_lower(self, lowval):
-        """
-        setting lower threshold level for the decision, which pixels to replace
-        (not in use so far - hardcoded values are used atm)
-        """
-        self.avdiff_lower = lowval
+    def set_avdiff_range(self, avdiff_range):
+        """set the threshold range for averdiff of left and right outer window"""
+        self.avdiff_range = avdiff_range
 
 
-    def set_avdiff_higher(self, highval):
-        """
-        setting higher threshold level for the decision, which pixels to replace
-        (not in use so far - hardcoded values are used atm)
-        """
-        self.avdiff_higher = highval
+    def set_innernewdiff_range(self, innernewdiff_range):
+        """set the threshold range for diff of inner and new"""
+        self.innernewdiff_range = innernewdiff_range
 
 
     def save(self, outfilename):
         """
-        save the picture, represented by the outpicarray to an image file
+        Save the picture, represented by the outpicarray to an image file.
+
+        Overwrites existing file with no mercy.
         """
         save_nparray_as_pic(self.outpicarray, outfilename)
 
 
     def save2(self, outfilename):
-        """
-        (not in use so far; possibly old stuf that can be removed)
-        """
+        """(not in use so far; possibly old stuf that can be removed)"""
         if not hasattr(self, outpicarray):
             print("No output array was created. Using the original picture")
             save_nparray_as_pic(self.bwpa, outfilename)
@@ -194,7 +184,7 @@ class Antikaro:
 
         # extract thresholds
         avdiff_low, avdiff_high = self.avdiff_range
-        innernewdiff_low, innernewdiff_high = self.inner_newdiff_range
+        innernewdiff_low, innernewdiff_high = self.innernewdiff_range
 
         innermvav = moving_average(linedata[stretch : -stretch], ins) # inside-win average
         averdiff_arr, newval_arr = moving_average_with_diff(linedata, stretch, ins)
@@ -229,10 +219,7 @@ class Antikaro:
     # Here the main work will be done
     # ===============================
     def remove_lineature(self):
-
-        """
-        Birds perspective algorithm of removing the karos.
-        """
+        """Birds perspective algorithm of removing the karos."""
         bwpicarray = self.bwpa
         height, width = bwpicarray.shape
 
