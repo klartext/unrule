@@ -178,15 +178,6 @@ class Antikaro:
             save_nparray_as_pic(self.outpicarray, outfilename)
 
 
-    def transpose(self):
-        """
-        transpose image data
-        """
-        self.bwpa        = np.transpose(self.bwpa)
-        self.outpicarray = np.transpose(self.outpicarray)
-
-
-
     def patch_linedata(self, linedata):
         """
         Depending on the settings and (so far hard coded) thresholds
@@ -242,11 +233,6 @@ class Antikaro:
         bwpicarray = self.bwpa
         height, width = bwpicarray.shape
 
-        # for lazy typing
-        ins     = self.ins     # length inner part
-        stretch = self.stretch # "stretching" each side of inner by stretch
-        outs    = self.outs    # whole length of inner + 2 * stretched
-
         outpicarray = bwpicarray.copy()
 
         avdiff_low = -20
@@ -257,7 +243,7 @@ class Antikaro:
 
         # HORIZONTAL
         t0 = pc()
-        for yval in range(0, height - outs):
+        for yval in range(0, height - self.outs):
 
             linedata      = outpicarray[yval]
             self.patch_linedata(linedata) # the actual data patch
@@ -267,7 +253,7 @@ class Antikaro:
         #print("# HORIZONTAL: {:8.3f}".format(t1 - t0), file=sys.stderr, flush=True)
 
         # VERTIKAL
-        for xval in range(0, width - outs):
+        for xval in range(0, width - self.outs):
 
             linedata      = outpicarray[:,xval]
             self.patch_linedata(linedata) # the actual data patch
@@ -287,7 +273,7 @@ def readimage_to_array(filename):
 
 def readimage_as_grayval_to_array(filename):
     pic = Image.open(filename)
-    pic_grayval = pic.convert('L') # Stimmt "L" überhaupt?
+    pic_grayval = pic.convert('L')
     return np.array(pic_grayval)
 
 def save_nparray_as_pic(nparr, filename):
