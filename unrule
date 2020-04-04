@@ -33,6 +33,8 @@ def pdl(data, comment):
 
 def moving_average(array, avlen):
     """
+    Calculate moving average of 'array', averaged over 'avlen'-many points.
+
     array: the array that will be averaged over
     avlen: the number of elements that go into the average (window-size)
     """
@@ -44,6 +46,8 @@ def moving_average(array, avlen):
 
 def moving_average_with_diff(array, stretch, inner_len):
     """
+    Calculate moving average and the diff of two mov. averages.
+
     For the two windows: left and right outside windows calculate:
       - mean of pixels of both windows
       - difference of the seperate means fo these windows
@@ -77,26 +81,22 @@ def moving_average_with_diff(array, stretch, inner_len):
     return diff, mean
 
 
-def value_in_interval(value, interval):
-    """
-    check if a value lies inside an interval
-    (old function, might be removed later)
-    """
-    low, high = interval
-    if low <= value <= high:
-        return True
-    else:
-        return False
-
-
 class Antikaro:
     """
-    This class does the main work of removing the rulers.
+    This class Antikaro does the main work of removing the rulers.
+
     Antikaro: Anti means against; Karo is german word for rhombus.
     Kariert (Karo-like): colloquialism for quadratic lineature of a paper.
     """
-    def __init__(self, filename, stretch=2, ins=2):
 
+    def __init__(self, filename, stretch=2, ins=2):
+        """
+        Initialize Antikaro objects.
+
+        filename: name of the imagefile (e.g. scanned handwritings)
+        stretch: size of left and right outer subwindows in pixel
+        ins: inside window size in pixel
+        """
         self.filename = filename
         self.bwpicarray = readimage_as_grayval_to_array(filename)
         self.height, self.width = self.bwpicarray.shape
@@ -118,8 +118,10 @@ class Antikaro:
 
     def _calc_outs(self):
         """
-        calculate sum of the number of pixels of the
-        left and right outer and the inner windows.
+        Calculate outer size of the whole sliding window (all three subwindows).
+
+        calculate sum of the number of pixels of the left and right outer and
+        the inner windows.
         """
         self.outs = 2 * self.stretch + self.ins
 
@@ -137,12 +139,12 @@ class Antikaro:
 
 
     def set_avdiff_range(self, avdiff_range):
-        """set the threshold range for averdiff of left and right outer window"""
+        """Set the threshold range for averdiff of left and right outer window."""
         self.avdiff_range = avdiff_range
 
 
     def set_innernewdiff_range(self, innernewdiff_range):
-        """set the threshold range for diff of inner and new"""
+        """Set the threshold range for diff of inner and new."""
         self.innernewdiff_range = innernewdiff_range
 
 
@@ -155,8 +157,10 @@ class Antikaro:
         save_nparray_as_pic(self.outpicarray, outfilename)
 
 
-    def patch_linedata(self, linedata):
+    def _patch_linedata(self, linedata):
         """
+        Patch the line data of the image, so that the rulers are removed.
+
         Depending on the settings and (so far hard coded) thresholds
         replace the karo-line by the average color value of the outer windows.
         This function awaits linedata (scanline in jpeglib-speech) and returns
@@ -205,7 +209,12 @@ class Antikaro:
     # Here the main work will be done
     # ===============================
     def remove_lineature(self):
-        """Birds perspective algorithm of removing the karos."""
+        """
+        Remove lineature (rules) from the image.
+
+        Birds perspective algorithm of removing the karos to be called from
+        outside.
+        """
         bwpicarray = self.bwpicarray
         height, width = bwpicarray.shape
 
@@ -220,7 +229,7 @@ class Antikaro:
         for yval in range(0, height - self.outs):
 
             linedata      = outpicarray[yval]
-            self.patch_linedata(linedata) # the actual data patch
+            self._patch_linedata(linedata) # the actual data patch
             outpicarray[yval] = linedata
 
         #t_1 = pc()
@@ -230,7 +239,7 @@ class Antikaro:
         for xval in range(0, width - self.outs):
 
             linedata      = outpicarray[:,xval]
-            self.patch_linedata(linedata) # the actual data patch
+            self._patch_linedata(linedata) # the actual data patch
             outpicarray[:,xval] = linedata
 
         #t_2 = pc()
@@ -242,12 +251,12 @@ class Antikaro:
 
 
 def readimage_to_array(filename):
-    """Returning numpy-array of image in file 'filename'"""
+    """Return numpy-array of image in file 'filename'"""
     pic = Image.open(filename)
     return np.array(pic)
 
 def readimage_as_grayval_to_array(filename):
-    """Returning numpy-array of (b/w converted) image from file 'filename'"""
+    """Return numpy-array of (b/w converted) image from file 'filename'"""
     pic = Image.open(filename)
     pic_grayval = pic.convert('L')
     return np.array(pic_grayval)
