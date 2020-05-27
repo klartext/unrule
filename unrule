@@ -195,8 +195,13 @@ class Antikaro:
         # find the indexes where changes need to be done
         # (hard coded values, I know it's bad - remove if parametrisation makes sense)
         # -------------------------------------------
-        where = np.where((avdiff_low < averdiff_arr < avdiff_high) &
-                         (innernewdiff_low < (innermvav - newval_arr) < innernewdiff_high))
+        #where = np.where((avdiff_low < averdiff_arr < avdiff_high) and
+        #                 (innernewdiff_low < (innermvav - newval_arr) < innernewdiff_high))
+        where = np.where((avdiff_low < averdiff_arr) &
+                      (averdiff_arr < avdiff_high) &
+                      (innernewdiff_low < innermvav - newval_arr) &
+                      (innermvav - newval_arr < innernewdiff_high))
+
 
         # set new values for all ins entries, according to the 'where' window
         # ----------------------------------------------------------------
